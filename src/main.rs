@@ -5,6 +5,7 @@ mod chunk;
 mod chunk_type;
 mod commands;
 mod png;
+mod key;
 
 
 pub type Error = Box<dyn std::error::Error>;

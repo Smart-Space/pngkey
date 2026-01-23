@@ -6,16 +6,28 @@ use crate::chunk::Chunk;
 use crate::chunk_type::ChunkType;
 use crate::png::Png;
 use crate::Result;
+use crate::key;
 
 pub fn encode(args: EncodeArgs) -> Result<()> {
     if !args.file_path.exists() {
         return Err("File does not exist".into());
     }
+
+    // 密钥与信息
+    let password = args.password.unwrap_or_else(|| "".to_string());
+    let message = args.message;
+    let encrypted_message: String;
+    if !password.is_empty() {
+        encrypted_message = key::encrypt(&message, &password)?;
+    } else {
+        encrypted_message = message;
+    }
+
     let bytes = fs::read(args.file_path.clone())?;
     let mut png = Png::try_from(&bytes[..])?;
     let new_chunk = Chunk::new(
         ChunkType::from_str(&args.chunk_type)?,
-        args.message.as_bytes().to_vec(),
+        encrypted_message.as_bytes().to_vec(),
     );
     png.append_chunk(new_chunk);
     if let Some(output) = args.output {
@@ -38,7 +50,9 @@ pub fn decode(args: DecodeArgs) -> Result<()> {
         .find(|chunk| chunk.chunk_type().to_string() == args.chunk_type)
         .ok_or("Chunk not found")?;
     let message: String = chunk.data().iter().map(|x| *x as char).collect();
-    println!("{}", message);
+    let password = args.password.unwrap_or_else(|| "".to_string());
+    let decrypted_message = key::decrypt(&message, &password)?;
+    println!("{}", decrypted_message);
     Ok(())
 }
 

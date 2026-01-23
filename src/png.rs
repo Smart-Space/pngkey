@@ -29,11 +29,6 @@ impl Png {
         }
     }
 
-    /// 从文件创建Png
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        todo!()
-    }
-
     /// 添加chunk到png
     pub fn append_chunk(&mut self, chunk: Chunk) {
         self.chunks.push(chunk);
