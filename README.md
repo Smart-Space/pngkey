@@ -2,6 +2,8 @@
 
 将信息文本(密文)写入png文件。
 
+[Github Releases · Smart-Space/pngkey](https://github.com/Smart-Space/pngkey/releases)
+
 ## 原理
 
 - PNG文件隐写参照[Introduction - PNGme: An Intermediate Rust Project](https://jrdngr.github.io/pngme_book/introduction.html)复刻
@@ -82,10 +84,11 @@ Options:
 ### 打印
 
 ```
-Usage: pngkey print <FILE_PATH>
+Usage: pngkey print <FILE_PATH> [CHUNK_TYPE]
 
 Arguments:
-  <FILE_PATH>  文件路径
+  <FILE_PATH>   文件路径
+  [CHUNK_TYPE]  可选，块名称
 
 Options:
   -h, --help  Print help

@@ -41,7 +41,7 @@ pub fn encrypt(plaintext: &str, password: &str) -> Result<String> {
 pub fn decrypt(encrypted: &str, password: &str) -> Result<String> {
     let parts: Vec<&str> = encrypted.split("::").collect();
     if parts.len() != 3 {
-        return Err("Invalid encrypted data format".into());
+        return Ok(String::from(encrypted));
     }
     if password.is_empty() {
         return Err("Need password to decrypt".into());
