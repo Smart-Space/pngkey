@@ -24,31 +24,31 @@ impl ChunkType {
         ]
     }
 
-    /// 辅助位
-    pub fn is_critical(&self) -> bool {
-        self.first_byte & 0b0010_0000 == 0
-    }
+    // /// 辅助位
+    // pub fn is_critical(&self) -> bool {
+    //     self.first_byte & 0b0010_0000 == 0
+    // }
 
-    /// 私有位
-    pub fn is_public(&self) -> bool {
-        self.second_byte & 0b0010_0000 == 0
-    }
+    // /// 私有位
+    // pub fn is_public(&self) -> bool {
+    //     self.second_byte & 0b0010_0000 == 0
+    // }
 
-    /// 保留位
-    pub fn is_reserved_bit_valid(&self) -> bool {
-        self.third_byte & 0b0010_0000 == 0
-    }
+    // /// 保留位
+    // pub fn is_reserved_bit_valid(&self) -> bool {
+    //     self.third_byte & 0b0010_0000 == 0
+    // }
 
-    /// 安全复制位
-    pub fn is_safe_to_copy(&self) -> bool {
-        self.fourth_byte & 0b0010_0000 == 1
-    }
+    // /// 安全复制位
+    // pub fn is_safe_to_copy(&self) -> bool {
+    //     self.fourth_byte & 0b0010_0000 == 1
+    // }
 
-    /// 如果保留字节有效并且所有四个字节均由字符A-Z或a-z表示，则返回true。
-    /// 此块类型应该始终有效
-    pub fn is_valid(&self) -> bool {
-        self.is_reserved_bit_valid()
-    }
+    // /// 如果保留字节有效并且所有四个字节均由字符A-Z或a-z表示，则返回true。
+    // /// 此块类型应该始终有效
+    // pub fn is_valid(&self) -> bool {
+    //     self.is_reserved_bit_valid()
+    // }
 }
 
 /// 判断是否为字母

@@ -8,9 +8,24 @@ use crate::png::Png;
 use crate::Result;
 use crate::key;
 
+
+/// 判断能否使用
+static VALID_CHUNK_TYPES: [&str; 23] = [
+    "IHDR", "PLTE", "IDAT", "IEND", "acTL", "cHRM", "cICP", "gAMA", "iCCP", "mDCV", "cLLI",
+    "sBIT", "sRGB", "bkGD", "hIST", "tRNS", "eXIf", "fcTL", "fdAT", "tIME", "zTXt", "iTXt", "tEXt",
+];
+fn is_valid_chunk_type(chunk_type_str: &str) -> bool {
+    !VALID_CHUNK_TYPES.contains(&chunk_type_str)
+}
+
 pub fn encode(args: EncodeArgs) -> Result<()> {
     if !args.file_path.exists() {
         return Err("File does not exist".into());
+    }
+
+    // chunk type可用
+    if !is_valid_chunk_type(&args.chunk_type) {
+        return Err(format!("Invalid ChunkType, could not in {VALID_CHUNK_TYPES:?}.").into());
     }
 
     // 密钥与信息
@@ -42,6 +57,12 @@ pub fn decode(args: DecodeArgs) -> Result<()> {
     if !args.file_path.exists() {
         return Err("File does not exist".into());
     }
+
+    // chunk type可用
+    if !is_valid_chunk_type(&args.chunk_type) {
+        return Err(format!("Invalid ChunkType, could not in {VALID_CHUNK_TYPES:?}.").into());
+    }
+
     let bytes = fs::read(args.file_path.clone())?;
     let png = Png::try_from(&bytes[..])?;
     let chunk = png

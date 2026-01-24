@@ -1,6 +1,5 @@
 use std::convert::TryFrom;
 use std::fmt;
-use std::io::{BufReader, Read};
 
 use crc;
 
@@ -51,11 +50,6 @@ impl Chunk {
         self.crc
     }
 
-    pub fn data_as_string(&self) -> Result<String> {
-        let string = String::from_utf8(self.data.clone())?;
-        Ok(string)
-    }
-
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.extend(&self.length.to_be_bytes());
@@ -88,10 +82,16 @@ impl TryFrom<&[u8]> for Chunk {
 
 impl fmt::Display for Chunk {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let data: String;
+        if &self.chunk_type().bytes() == b"IDAT" {
+            data = "<Image Data>".to_owned();
+        } else {
+            data = String::from_utf8_lossy(self.data()).to_string();
+        }
         writeln!(f, "Chunk {{",)?;
         writeln!(f, "  Length: {}", self.length())?;
         writeln!(f, "  Type: {}", self.chunk_type())?;
-        writeln!(f, "  Data: {}", self.data().len())?;
+        writeln!(f, "  Data: {}", data)?;
         writeln!(f, "  CRC: {}", self.crc())?;
         writeln!(f, "}}",)?;
         Ok(())

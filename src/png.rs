@@ -1,14 +1,8 @@
 use std::convert::TryFrom;
 use std::fmt;
-use std::fs;
-use std::io::{BufReader, Read};
-use std::path::Path;
-use std::str::FromStr;
 
-use crate::chunk;
 use crate::{Error, Result};
 use crate::chunk::Chunk;
-use crate::chunk_type::ChunkType;
 
 /// PNG结构
 #[derive(Debug)]
@@ -20,14 +14,6 @@ pub struct Png {
 impl Png {
     /// 固定开头
     pub const STANDARD_HEADER: [u8; 8] = [137, 80, 78, 71 ,13, 10, 26, 10];
-
-    /// 从Chunks创建Png
-    pub fn from_chunks(chunks: Vec<Chunk>) -> Self {
-        Png {
-            header: Png::STANDARD_HEADER,
-            chunks,
-        }
-    }
 
     /// 添加chunk到png
     pub fn append_chunk(&mut self, chunk: Chunk) {
@@ -43,20 +29,16 @@ impl Png {
         Ok(self.chunks.remove(index))
     }
 
-    pub fn header(&self) -> &[u8; 8] {
-        &self.header
-    }
-
     pub fn chunks(&self) -> &[Chunk] {
         &self.chunks
     }
 
-    /// 找到第一个符合条件的Chunk
-    pub fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
-        self.chunks
-            .iter()
-            .find(|chunk| format!("{}", chunk.chunk_type()) == chunk_type)
-    }
+    // /// 找到第一个符合条件的Chunk
+    // pub fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
+    //     self.chunks
+    //         .iter()
+    //         .find(|chunk| format!("{}", chunk.chunk_type()) == chunk_type)
+    // }
 
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
