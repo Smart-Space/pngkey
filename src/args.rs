@@ -60,4 +60,6 @@ pub struct RemoveArgs {
 pub struct PrintArgs {
     /// The file path to the PNG file to be printed.
     pub file_path: PathBuf,
+    /// The chunk type to be used for the message.
+    pub chunk_type: Option<String>,
 }

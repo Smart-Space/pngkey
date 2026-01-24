@@ -70,7 +70,7 @@ pub fn decode(args: DecodeArgs) -> Result<()> {
         .iter()
         .find(|chunk| chunk.chunk_type().to_string() == args.chunk_type)
         .ok_or("Chunk not found")?;
-    let message: String = chunk.data().iter().map(|x| *x as char).collect();
+    let message = std::str::from_utf8(chunk.data()).expect("Invalid UTF-8");
     let password = args.password.unwrap_or_else(|| "".to_string());
     let decrypted_message = key::decrypt(&message, &password)?;
     println!("{}", decrypted_message);
@@ -92,9 +92,25 @@ pub fn print(args: PrintArgs) -> Result<()> {
     if !args.file_path.exists() {
         return Err("File does not exist".into());
     }
+
+    let mut chunk_type: String = ("").to_string();
+    if let Some(_chunk_type) = args.chunk_type {
+        chunk_type = _chunk_type;
+    }
+
     let bytes = fs::read(args.file_path.clone())?;
     let png = Png::try_from(&bytes[..])?;
-    for chunk in png.chunks() {
+
+    if chunk_type.is_empty() {
+        for chunk in png.chunks() {
+            println!("{}", chunk);
+        }
+    } else {
+        let chunk = png
+            .chunks()
+            .iter()
+            .find(|chunk| chunk.chunk_type().to_string() == chunk_type)
+            .ok_or("Chunk not found")?;
         println!("{}", chunk);
     }
     Ok(())
