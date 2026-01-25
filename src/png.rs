@@ -1,8 +1,12 @@
 use std::convert::TryFrom;
 use std::fmt;
 
+mod chunk;
+mod chunk_type;
+pub mod command;
+
 use crate::{Error, Result};
-use crate::chunk::Chunk;
+use chunk::Chunk;
 
 /// PNG结构
 #[derive(Debug)]
@@ -59,17 +63,22 @@ impl Png {
     }
 }
 
+pub fn is_png(bytes: &[u8]) -> bool {
+    if bytes.len() < 8 {
+        return false;
+    }
+    let header: [u8; 8] = bytes[..8].try_into().unwrap();
+    header == Png::STANDARD_HEADER
+}
+
 impl TryFrom<&[u8]> for Png {
     type Error = Error;
 
     fn try_from(bytes: &[u8]) -> Result<Png> {
-        if bytes.len() < 8 {
-            return Err("PNG data is too short (<8)".into());
+        if !is_png(bytes) {
+            return Err("Not a PNG file".into());
         }
         let header: [u8; 8] = bytes[..8].try_into().unwrap();
-        if header != Png::STANDARD_HEADER {
-            return Err("PNG header is invalid".into());
-        }
         let mut chunks = Vec::new();
         let mut index = 8;
         while index < bytes.len() {

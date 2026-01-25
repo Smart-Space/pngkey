@@ -4,7 +4,7 @@ use std::fmt;
 use crc;
 
 use crate::{Error, Result};
-use crate::chunk_type::ChunkType;
+use super::chunk_type::ChunkType;
 
 /// PNG块
 /// http://www.libpng.org/pub/png/spec/1.2/PNG-Structure.html
