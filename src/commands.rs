@@ -1,5 +1,4 @@
 use std::fs;
-use std::io::Bytes;
 
 use crate::args::*;
 use crate::png::{Png, is_png};
