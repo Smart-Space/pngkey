@@ -34,7 +34,7 @@ pub fn encode(args: EncodeArgs, bytes: &Vec<u8>) -> Result<()> {
         encrypted_message = message;
     }
     
-    let mut png = Png::try_from(&bytes[..])?;
+    let mut png = Png::try_from(bytes.as_slice())?;
 
     // 判断chunk_type是否存在
     if let Some(index) = png.chunk_by_type(&args.chunk_type) {
@@ -56,14 +56,13 @@ pub fn encode(args: EncodeArgs, bytes: &Vec<u8>) -> Result<()> {
     Ok(())
 }
 
-pub fn decode(args: DecodeArgs) -> Result<()> {
+pub fn decode(args: DecodeArgs, bytes: &Vec<u8>) -> Result<()> {
     // chunk type可用
     if !is_valid_chunk_type(&args.chunk_type) {
         return Err(format!("Invalid ChunkType, could not in {VALID_CHUNK_TYPES:?}.").into());
     }
 
-    let bytes = fs::read(args.file_path.clone())?;
-    let png = Png::try_from(&bytes[..])?;
+    let png = Png::try_from(bytes.as_slice())?;
     let chunk = png
         .chunks()
         .iter()
@@ -76,22 +75,20 @@ pub fn decode(args: DecodeArgs) -> Result<()> {
     Ok(())
 }
 
-pub fn remove(args: RemoveArgs) -> Result<()> {
-    let bytes = fs::read(args.file_path.clone())?;
-    let mut png = Png::try_from(&bytes[..])?;
+pub fn remove(args: RemoveArgs, bytes: &Vec<u8>) -> Result<()> {
+    let mut png = Png::try_from(bytes.as_slice())?;
     png.remove_chunk(&args.chunk_type)?;
     fs::write(args.file_path, png.as_bytes())?;
     Ok(())
 }
 
-pub fn print(args: PrintArgs) -> Result<()> {
+pub fn print(args: PrintArgs, bytes: &Vec<u8>) -> Result<()> {
     let mut chunk_type: String = ("").to_string();
     if let Some(_chunk_type) = args.chunk_type {
         chunk_type = _chunk_type;
     }
 
-    let bytes = fs::read(args.file_path.clone())?;
-    let png = Png::try_from(&bytes[..])?;
+    let png = Png::try_from(bytes.as_slice())?;
 
     if chunk_type.is_empty() {
         for chunk in png.chunks() {

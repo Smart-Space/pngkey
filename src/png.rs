@@ -75,9 +75,9 @@ impl TryFrom<&[u8]> for Png {
     type Error = Error;
 
     fn try_from(bytes: &[u8]) -> Result<Png> {
-        if !is_png(bytes) {
-            return Err("Not a PNG file".into());
-        }
+        // if !is_png(bytes) {
+        //     return Err("Not a PNG file".into());
+        // }
         let header: [u8; 8] = bytes[..8].try_into().unwrap();
         let mut chunks = Vec::new();
         let mut index = 8;
