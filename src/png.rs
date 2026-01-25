@@ -22,23 +22,29 @@ impl Png {
 
     /// 搜索特定chunk_type的Chunk并移除
     pub fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
-        let index = self
-            .chunks.iter()
-            .position(|chunk| format!("{}", chunk.chunk_type()) == chunk_type)
-            .ok_or("Chunk not found")?;
-        Ok(self.chunks.remove(index))
+        if let Some(index) = self.chunk_by_type(chunk_type) {
+            return Ok(self.chunks.remove(index));
+        } else {
+            return Err(format!("PNG does not contain chunk type {}", chunk_type).into());
+        }
+    }
+
+    /// 修改特定位置的chunk
+    pub fn modify_chunk(&mut self, index: usize, data: Vec<u8>) {
+        self.chunks[index].set_data(data);
     }
 
     pub fn chunks(&self) -> &[Chunk] {
         &self.chunks
     }
 
-    // /// 找到第一个符合条件的Chunk
-    // pub fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
-    //     self.chunks
-    //         .iter()
-    //         .find(|chunk| format!("{}", chunk.chunk_type()) == chunk_type)
-    // }
+    /// 找到第一个符合条件的Chunk
+    pub fn chunk_by_type(&self, chunk_type: &str) -> Option<usize> {
+        let index = self
+            .chunks.iter()
+            .position(|chunk| format!("{}", chunk.chunk_type()) == chunk_type);
+        index
+    }
 
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();

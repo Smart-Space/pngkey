@@ -16,16 +16,19 @@ pub struct Chunk {
     crc: u32,
 }
 
+fn calculate_crc(chunk_type: &[u8; 4], data: &[u8]) -> u32 {
+    let crc_content = chunk_type
+        .iter()
+        .chain(data)
+        .copied()
+        .collect::<Vec<u8>>();
+    crc::Crc::<u32>::new(&crc::CRC_32_ISO_HDLC).checksum(&crc_content)
+}
+
 impl Chunk {
     pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
         let length = data.len() as u32;
-        let crc_content = chunk_type
-            .bytes()
-            .iter()
-            .chain(data.iter())
-            .copied()
-            .collect::<Vec<u8>>();
-        let crc = crc::Crc::<u32>::new(&crc::CRC_32_ISO_HDLC).checksum(&crc_content);
+        let crc = calculate_crc(&chunk_type.bytes(), &data);
         Chunk {
             length,
             chunk_type,
@@ -44,6 +47,12 @@ impl Chunk {
 
     pub fn data(&self) -> &[u8] {
         &self.data
+    }
+
+    pub fn set_data(&mut self, data: Vec<u8>) {
+        self.length = data.len() as u32;
+        self.data = data;
+        self.crc = calculate_crc(&self.chunk_type.bytes(), &self.data);
     }
 
     pub fn crc(&self) -> u32 {

@@ -40,11 +40,18 @@ pub fn encode(args: EncodeArgs) -> Result<()> {
 
     let bytes = fs::read(args.file_path.clone())?;
     let mut png = Png::try_from(&bytes[..])?;
-    let new_chunk = Chunk::new(
-        ChunkType::from_str(&args.chunk_type)?,
-        encrypted_message.as_bytes().to_vec(),
-    );
-    png.append_chunk(new_chunk);
+
+    // 判断chunk_type是否存在
+    if let Some(index) = png.chunk_by_type(&args.chunk_type) {
+        png.modify_chunk(index, encrypted_message.as_bytes().to_vec());
+    } else {
+        let new_chunk = Chunk::new(
+            ChunkType::from_str(&args.chunk_type)?,
+            encrypted_message.as_bytes().to_vec(),
+        );
+        png.append_chunk(new_chunk);
+    }
+    
     if let Some(output) = args.output {
         fs::write(output, png.as_bytes())?;
     } else {
