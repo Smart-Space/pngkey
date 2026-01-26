@@ -12,7 +12,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 fn main() -> Result<()> {
     let args = args::Cli::parse();
-    println!("{:?}", args);
+    // println!("{:?}", args);
     let res = match args.subcommand {
         args::PngKeyArgs::Encode(encode_args) => commands::encode(encode_args),
         args::PngKeyArgs::Decode(decode_args) => commands::decode(decode_args),

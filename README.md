@@ -1,21 +1,30 @@
 # pngkey
 
-将信息文本(密文)写入png文件。
+将信息文本(密文)写入**png**或**jpg**文件。
 
 [Github Releases · Smart-Space/pngkey](https://github.com/Smart-Space/pngkey/releases)
 
 ## 原理
 
 - PNG文件隐写参照[Introduction - PNGme: An Intermediate Rust Project](https://jrdngr.github.io/pngme_book/introduction.html)复刻
+
+  > 这也是项目名为"pngkey"的原因，最初的隐写功能仅用于png格式。
+
+- JPG文件隐写方法类似，但由我自己实现，可能存在疏漏。
+
 - 加密
   - 无密码时，明文写入指定`chunk_type`块；
   - 有密码时，通过Argon2id生成密钥，再由ChaCha20-Poly1305加密后存储到指定`chunk_type`块。
 
-> `chunk_type`，需要为四个英文字母，不能为PNG规范中的保留标识：
->
-> ```rust
-> ["IHDR", "PLTE", "IDAT", "IEND", "acTL", "cHRM", "cICP", "gAMA", "iCCP", "mDCV", "cLLI", "sBIT", "sRGB", "bkGD", "hIST", "tRNS", "eXIf", "fcTL", "fdAT", "tIME", "zTXt", "iTXt", "tEXt"]
-> ```
+  > PNG的`chunk_type`，需要为四个英文字母，不能为PNG规范中的保留标识：
+  >
+  > ```rust
+  > ["IHDR", "PLTE", "IDAT", "IEND", "acTL", "cHRM", "cICP", "gAMA", "iCCP", "mDCV", "cLLI", "sBIT", "sRGB", "bkGD", "hIST", "tRNS", "eXIf", "fcTL", "fdAT", "tIME", "zTXt", "iTXt", "tEXt"]
+  > ```
+  >
+  > ---
+  >
+  > JPG的`chunk_type`为一个大于等于1但是小于等于191的数字。
 
 ## 使用
 
@@ -79,7 +88,7 @@ Options:
   -h, --help  Print help
 ```
 
-> **注意**，这里不会检测块名称是否为PNG标准需要。
+> **注意**，这里不会检测块名称是否为PNG或JPG标准需要。
 
 ### 打印
 
@@ -94,4 +103,4 @@ Options:
   -h, --help  Print help
 ```
 
-> PNG数据块转为文本数据量非常庞大，不会显示具体数据内容。
+> PNG和JPG数据块转为文本数据量非常庞大，不会显示具体数据内容。

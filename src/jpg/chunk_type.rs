@@ -38,7 +38,7 @@ impl FromStr for ChunkType {
         if s.len() != 2 {
             return Err("Invalid chunk type format".into());
         }
-        let type_name = u8::from_str_radix(s, 16)?;
+        let type_name = u8::from_str_radix(s, 10)?;
         ChunkType::try_from(type_name)
     }
 }

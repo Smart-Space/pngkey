@@ -1,11 +1,7 @@
 use std::fs;
 use std::str::FromStr;
 
-use crate::args;
 use crate::args::*;
-use crate::jpg::chunk;
-use crate::jpg::chunk_type;
-use crate::png;
 use super::chunk::Chunk;
 use super::chunk_type::ChunkType;
 use super::Jpg;
@@ -13,18 +9,14 @@ use crate::Result;
 use crate::key;
 
 
-/// 判断能否使用
-static VALID_CHUNK_TYPES: [u8; 10] = [
-    0xd8, 0xd9, 0xc0, 0xdb, 0xc4, 0xda, 0xe2, 0xdd, 0xfe, 0xc1,
-];
 fn is_valid_chunk_type(chunk_type_str: &str) -> bool {
     let chunk_type_u8 = u8::from_str(chunk_type_str).unwrap();
-    !VALID_CHUNK_TYPES.contains(&chunk_type_u8)
+    0x01 <= chunk_type_u8 && chunk_type_u8 <= 0xbf
 }
 
 pub fn encode(args: EncodeArgs, bytes: &Vec<u8>) -> Result<()> {
     if !is_valid_chunk_type(&args.chunk_type) {
-        return Err(format!("Invalid ChunkType, could not in {VALID_CHUNK_TYPES:?}.").into());
+        return Err("Invalid ChunkType, should 1<= chunk-type <= 191.".into());
     }
 
     // 密钥与信息
@@ -60,7 +52,7 @@ pub fn encode(args: EncodeArgs, bytes: &Vec<u8>) -> Result<()> {
 
 pub fn decode(args: DecodeArgs, bytes: &Vec<u8>) -> Result<()> {
     if !is_valid_chunk_type(&args.chunk_type) {
-        return Err(format!("Invalid ChunkType, could not in {VALID_CHUNK_TYPES:?}.").into());
+        return Err("Invalid ChunkType, should 1<= chunk-type <= 191.".into());
     }
 
     let jpg = Jpg::try_from(bytes.as_slice())?;

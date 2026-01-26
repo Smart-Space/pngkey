@@ -1,9 +1,7 @@
 use std::convert::TryFrom;
 use std::fmt;
 
-use clap::builder::Str;
-
-use crate::{Error, Result, jpg::chunk_type};
+use crate::{Error, Result};
 use super::chunk_type::ChunkType;
 
 
@@ -22,7 +20,12 @@ impl Chunk {
     pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
         let length: u16;
         if AVOID_LENGTH_TYPE.contains(&chunk_type.bytes()) {
-            length = 0;
+            if &chunk_type.bytes() == &0xda {
+                // DA的长度放在数据里，这里只是显示头长度
+                length = u16::from_be_bytes([data[0], data[1]]);
+            } else {
+                length = 0;
+            }
         } else {
             length = u16::try_from(data.len()).unwrap() + 2;
         }
