@@ -29,7 +29,7 @@
 ## 使用
 
 ```
-A tool to encrypt and decrypt messages in PNG images using ChaCha20-Poly1305 and Argon2
+A tool to encrypt and decrypt messages in PNG or JPG images using ChaCha20-Poly1305 and Argon2
 
 Usage: pngkey <COMMAND>
 
