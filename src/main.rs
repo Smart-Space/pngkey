@@ -3,6 +3,7 @@ use clap::Parser;
 mod args;
 mod commands;
 mod png;
+mod jpg;
 mod key;
 
 

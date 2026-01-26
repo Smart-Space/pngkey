@@ -3,6 +3,8 @@ use std::fs;
 use crate::args::*;
 use crate::png::is_png;
 use crate::png::command as pngcommand;
+use crate::jpg::is_jpg;
+use crate::jpg::command as jpgcommand;
 use crate::Result;
 
 pub fn encode(args: EncodeArgs) -> Result<()> {
@@ -13,6 +15,10 @@ pub fn encode(args: EncodeArgs) -> Result<()> {
 
     if is_png(&bytes) {
         pngcommand::encode(args, &bytes)?;
+    } else if is_jpg(&bytes) {
+        jpgcommand::encode(args, &bytes)?;
+    } else {
+        return Err("No Supported Format".into());
     }
 
     Ok(())
@@ -26,6 +32,10 @@ pub fn decode(args: DecodeArgs) -> Result<()> {
 
     if is_png(&bytes) {
         pngcommand::decode(args, &bytes)?;
+    } else if is_jpg(&bytes) {
+        jpgcommand::decode(args, &bytes)?;
+    } else {
+        return Err("No Supported Format".into());
     }
     
     Ok(())
@@ -37,7 +47,13 @@ pub fn remove(args: RemoveArgs) -> Result<()> {
     }
     let bytes = fs::read(args.file_path.clone())?;
     
-    pngcommand::remove(args, &bytes)?;
+    if is_png(&bytes) {
+        pngcommand::remove(args, &bytes)?;
+    } else if is_jpg(&bytes) {
+        jpgcommand::remove(args, &bytes)?;
+    } else {
+        return Err("No Supported Format".into());
+    }
 
     Ok(())
 }
@@ -48,7 +64,13 @@ pub fn print(args: PrintArgs) -> Result<()> {
     }
     let bytes = fs::read(args.file_path.clone())?;
 
-    pngcommand::print(args, &bytes)?;
+    if is_png(&bytes) {
+        pngcommand::print(args, &bytes)?;
+    } else if is_jpg(&bytes) {
+        jpgcommand::print(args, &bytes)?;
+    } else {
+        return Err("No Supported Format".into());
+    }
     
     Ok(())
 }
