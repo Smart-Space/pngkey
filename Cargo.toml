@@ -5,6 +5,10 @@ authors = ["Smart-Space<smart-space@qq.com>"]
 description = "A tool to encrypt and decrypt messages in PNG or JPG images using ChaCha20-Poly1305 and Argon2"
 edition = "2024"
 
+[profile.release]
+strip = true
+lto = true
+
 [dependencies]
 crc = "3.4.0"
 clap = { version = "4.5.54", features = ["derive"] }

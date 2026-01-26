@@ -10,7 +10,7 @@ use crate::key;
 
 
 fn is_valid_chunk_type(chunk_type_str: &str) -> bool {
-    let chunk_type_u8 = u8::from_str(chunk_type_str).unwrap();
+    let chunk_type_u8 = u8::from_str(chunk_type_str).unwrap_or(0);
     0x01 <= chunk_type_u8 && chunk_type_u8 <= 0xbf
 }
 
