@@ -3,6 +3,7 @@ use std::{convert::TryFrom, io::Read};
 use std::{fmt, vec};
 
 mod chunk;
+pub mod command;
 
 use crate::{Error, Result};
 use chunk::*;
@@ -28,13 +29,10 @@ impl Gif {
 
     pub fn modify_chunk(&mut self, index: usize, data: Vec<u8>) {
         if let Chunk::Extension(chunk) = &mut self.chunks[index] {
-            let identifier = chunk.data[0..8].to_vec();
-            let auth_code = chunk.data[8..11].to_vec();
-            let mut new_data = Vec::new();
-            new_data.extend_from_slice(&identifier);
-            new_data.extend_from_slice(&auth_code);
-            new_data.extend_from_slice(&data);
-            chunk.data = new_data;
+            let identifier: &[u8; 8] = &chunk.data[1..9].try_into().unwrap();
+            let auth_code: &[u8; 3] = &chunk.data[9..12].try_into().unwrap();
+            self.chunks.remove(index);
+            let _ = self.add_application_extension(identifier, auth_code, &data);
         }
     }
 
@@ -42,10 +40,12 @@ impl Gif {
         &self.chunks
     }
 
+    const IDENTIFIER: [u8; 8] = [b' ', b'p', b'n', b'g', b'k', b'e', b'y', b' '];
     pub fn chunk_by_type(&self, chunk_type: &str) -> Option<usize> {
+        let chunk_type_code = chunk_type.as_bytes().to_vec();
         let index = self
             .chunks.iter()
-            .position(|c| matches!(c, Chunk::Extension(e) if e.extension_type == 0xFF && e.data[0..8].to_vec() == " pngkey ".as_bytes().to_vec() && e.data[8..11].to_vec() == chunk_type.as_bytes().to_vec()));
+            .position(|c| matches!(c, Chunk::Extension(e) if e.extension_type == 0xFF && e.data[1..9].to_vec() == Self::IDENTIFIER && e.data[9..12].to_vec() == chunk_type_code));
         index
     }
 
@@ -58,8 +58,8 @@ impl Gif {
                     bytes.write_all(header)?;
                 }
                 Chunk::LogicalScreenDescriptor(lsd) => {
-                    bytes.write_all(&lsd.width.to_be_bytes())?;
-                    bytes.write_all(&lsd.height.to_be_bytes())?;
+                    bytes.write_all(&lsd.width.to_le_bytes())?;
+                    bytes.write_all(&lsd.height.to_le_bytes())?;
                     bytes.write_all(&[lsd.packed_fields])?;
                     bytes.write_all(&[lsd.background_color_index])?;
                     bytes.write_all(&[lsd.pixel_aspect_ratio])?;
@@ -69,10 +69,10 @@ impl Gif {
                 }
                 Chunk::Image(image) => {
                     bytes.write_all(&[0x2c])?;
-                    bytes.write_all(&image.descriptor.left.to_be_bytes())?;
-                    bytes.write_all(&image.descriptor.top.to_be_bytes())?;
-                    bytes.write_all(&image.descriptor.width.to_be_bytes())?;
-                    bytes.write_all(&image.descriptor.height.to_be_bytes())?;
+                    bytes.write_all(&image.descriptor.left.to_le_bytes())?;
+                    bytes.write_all(&image.descriptor.top.to_le_bytes())?;
+                    bytes.write_all(&image.descriptor.width.to_le_bytes())?;
+                    bytes.write_all(&image.descriptor.height.to_le_bytes())?;
                     bytes.write_all(&[image.descriptor.packed_fields])?;
                     
                     if let Some(lct) = &image.local_color_table {
@@ -101,6 +101,7 @@ impl Gif {
         let mut ext_data = Vec::new();
         
         // Application Extension头部（11字节）
+        ext_data.push(0x0b);
         ext_data.extend_from_slice(identifier);
         ext_data.extend_from_slice(auth_code);
         
@@ -132,19 +133,20 @@ impl Gif {
         Ok(())
     }
     
-    /// 提取所有Application Extension中的数据
-    pub fn extract_application_extensions(&self, code: &str) -> Vec<(String, String, Vec<u8>)> {
-        let mut results = Vec::new();
-        
+    /// 提取Application Extension中的数据
+    pub fn extract_application_extensions(&self, chunk_type: &str) -> Option<Vec<u8>> {       
         for chunk in &self.chunks {
             if let Chunk::Extension(ext) = chunk {
                 if ext.extension_type == 0xFF && ext.data.len() >= 11 {
-                    let identifier = String::from_utf8_lossy(&ext.data[0..8]).to_string();
-                    let auth_code = String::from_utf8_lossy(&ext.data[8..11]).to_string();
+                    let identifier = String::from_utf8_lossy(&ext.data[1..9]).to_string();
+                    let auth_code = String::from_utf8_lossy(&ext.data[9..12]).to_string();
+                    if identifier != " pngkey " || auth_code != chunk_type {
+                        continue; // 跳过非目标扩展块
+                    }
                     
                     // 解析子块数据
                     let mut data = Vec::new();
-                    let mut pos = 11;
+                    let mut pos = 12;
                     while pos < ext.data.len() {
                         let block_size = ext.data[pos] as usize;
                         if block_size == 0 {
@@ -158,17 +160,17 @@ impl Gif {
                         pos += block_size;
                     }
                     
-                    results.push((identifier, auth_code, data));
+                    return Some(data);
                 }
             }
         }
         
-        results
+        None
     }
 
     /// 内部辅助方法
     
-    fn read_logical_screen_descriptor<R: Read>(reader: &mut R) -> Result<(LogicalScreenDescriptor)> {
+    fn read_logical_screen_descriptor<R: Read>(reader: &mut R) -> Result<LogicalScreenDescriptor> {
         let mut buf = [0u8; 7];
         reader.read_exact(&mut buf)?;
         
@@ -181,7 +183,7 @@ impl Gif {
         })
     }
     
-    fn read_image_chunk<R: Read>(reader: &mut R) -> Result<(ImageChunk)> {
+    fn read_image_chunk<R: Read>(reader: &mut R) -> Result<ImageChunk> {
         let mut buf = [0u8; 9];
         reader.read_exact(&mut buf)?;
         
@@ -202,9 +204,14 @@ impl Gif {
         } else {
             None
         };
-        
+
         // 读取图像数据（LZW压缩数据的子块链）
-        let image_data = Self::read_sub_blocks(reader)?;
+        let mut lzw_min = [0u8; 1];
+        reader.read_exact(&mut lzw_min)?;
+        
+        let mut image_data = vec![lzw_min[0]];
+        let sub = Self::read_sub_blocks(reader)?;
+        image_data.extend_from_slice(&sub);
         
         Ok(ImageChunk {
             descriptor,
@@ -213,11 +220,25 @@ impl Gif {
         })
     }
     
-    fn read_extension_chunk<R: Read>(reader: &mut R) -> Result<(ExtensionChunk)> {
+    fn read_extension_chunk<R: Read>(reader: &mut R) -> Result<ExtensionChunk> {
         let mut ext_type = [0u8; 1];
         reader.read_exact(&mut ext_type)?;
         
-        let data = Self::read_sub_blocks(reader)?;
+        let mut data = Vec::new();
+
+        if ext_type[0] != 0xEF {
+            // 非Comment扩展
+            let mut size = [0u8; 1];
+            reader.read_exact(&mut size)?;
+            data.push(size[0]);
+
+            let mut fixed = vec![0u8; size[0] as usize];
+            reader.read_exact(&mut fixed)?;
+            data.extend_from_slice(&fixed);
+        }
+
+        let mut sub = Self::read_sub_blocks(reader)?;
+        data.append(&mut sub);
         
         Ok(ExtensionChunk {
             extension_type: ext_type[0],
@@ -230,6 +251,7 @@ impl Gif {
         loop {
             let mut size_byte = [0u8; 1];
             reader.read_exact(&mut size_byte)?;
+            data.push(size_byte[0]);
             
             let size = size_byte[0] as usize;
             if size == 0 {
@@ -264,7 +286,7 @@ impl TryFrom<&[u8]> for Gif {
 
         let lsd = Self::read_logical_screen_descriptor(&mut cursor)?;
         let has_gct = (lsd.packed_fields & 0x80) != 0;
-        let gct_size_factor = (lsd.packed_fields & 0x70);
+        let gct_size_factor = lsd.packed_fields & 0x07 ;
         chunks.push(Chunk::LogicalScreenDescriptor(lsd));
 
         let global_color_table_size = if has_gct {

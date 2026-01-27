@@ -64,9 +64,8 @@ impl fmt::Display for ImageChunk {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "ImageChunk {{")?;
         writeln!(f, "  Descriptor: {}", self.descriptor)?;
-        if let Some(ref local_color_table) = self.local_color_table {
-            writeln!(f, "  Local color table: [{}]",
-                     local_color_table.iter().map(|&b| format!("{:02x}", b)).collect::<Vec<_>>().join(", "))?;
+        if let Some(_) = self.local_color_table {
+            writeln!(f, "  <Local Color Table Data>")?;
         }
         writeln!(f, "  Image: <Image Data>")?;
         writeln!(f, "}}")?;
@@ -91,7 +90,7 @@ impl fmt::Display for ImageDescriptor {
         writeln!(f, "    width: {},", self.width)?;
         writeln!(f, "    height: {},", self.height)?;
         writeln!(f, "    packed_fields: {:#04x},", self.packed_fields)?;
-        writeln!(f, "  }}")?;
+        write!(f, "  }}")?;
         Ok(())
     }
 }
@@ -106,9 +105,13 @@ impl fmt::Display for ExtensionChunk {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "ExtensionChunk {{")?;
         writeln!(f, "  Extension type: {:#04x},", self.extension_type)?;
-        writeln!(f, "  Application Identifier: {{ pngkey }}")?;
-        writeln!(f, "  Application Authentication Code: {}", self.data[8..11].iter().map(|&b| b as char).collect::<String>())?;
-        writeln!(f, "  Data: [{}]", String::from_utf8_lossy(&self.data[11..]))?;
+        if self.extension_type == 0xff {
+            writeln!(f, "  Application Identifier: {}", self.data[1..9].iter().map(|&b| b as char).collect::<String>())?;
+            writeln!(f, "  Application Authentication Code: {}", self.data[9..12].iter().map(|&b| b as char).collect::<String>())?;
+            writeln!(f, "  Data: [{}]", String::from_utf8_lossy(&self.data[12..]))?;
+        } else {
+            writeln!(f, "  ...Datas...")?;
+        }
         writeln!(f, "}}")?;
         Ok(())
     }
