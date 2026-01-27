@@ -1,6 +1,6 @@
 [package]
 name = "pngkey"
-version = "2.0.0"
+version = "2.1.0"
 authors = ["Smart-Space<smart-space@qq.com>"]
 description = "A tool to encrypt and decrypt messages in PNG or JPG images using ChaCha20-Poly1305 and Argon2"
 edition = "2024"
