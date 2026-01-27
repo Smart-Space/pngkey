@@ -2,14 +2,13 @@ use std::convert::TryFrom;
 use std::fmt;
 
 use crate::{Error, Result};
-use super::chunk_type::ChunkType;
 
 
 /// JPG块
 #[derive(Debug, Clone)]
 pub struct Chunk {
     head: u8,
-    chunk_type: ChunkType,
+    chunk_type: u8,
     length: u16,
     data: Vec<u8>,
 }
@@ -17,10 +16,10 @@ pub struct Chunk {
 static AVOID_LENGTH_TYPE: [u8; 3] = [0xd8, 0xd9, 0xda];
 
 impl Chunk {
-    pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
+    pub fn new(chunk_type: u8, data: Vec<u8>) -> Chunk {
         let length: u16;
-        if AVOID_LENGTH_TYPE.contains(&chunk_type.bytes()) {
-            if &chunk_type.bytes() == &0xda {
+        if AVOID_LENGTH_TYPE.contains(&chunk_type) {
+            if chunk_type == 0xda {
                 // DA的长度放在数据里，这里只是显示头长度
                 length = u16::from_be_bytes([data[0], data[1]]);
             } else {
@@ -41,7 +40,7 @@ impl Chunk {
         self.length
     }
 
-    pub fn chunk_type(&self) -> &ChunkType {
+    pub fn chunk_type(&self) -> &u8 {
         &self.chunk_type
     }
 
@@ -57,8 +56,8 @@ impl Chunk {
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.extend(&self.head.to_be_bytes());
-        bytes.extend(&self.chunk_type.bytes().to_be_bytes());
-        if !AVOID_LENGTH_TYPE.contains(&self.chunk_type.bytes()) {
+        bytes.extend(&self.chunk_type.to_be_bytes());
+        if !AVOID_LENGTH_TYPE.contains(&self.chunk_type) {
             bytes.extend(&self.length.to_be_bytes());
         }
         bytes.extend(&self.data);
@@ -77,7 +76,7 @@ impl TryFrom<&[u8]> for Chunk {
         if head != 0xff {
             return Err("Invalid chunk head".into());
         }
-        let chunk_type = ChunkType::try_from(value[1])?;
+        let chunk_type = value[1];
         let data = value[4..].to_vec();
         let chunk = Chunk::new(chunk_type, data);
         Ok(chunk)
@@ -88,7 +87,7 @@ static AVOID_TYPE: [u8; 2] = [0xc4, 0xda];
 impl fmt::Display for Chunk {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let data: String;
-        let chunk_type_name = self.chunk_type.bytes();
+        let chunk_type_name = self.chunk_type;
         if AVOID_TYPE.contains(&chunk_type_name) {
             data = format!("<{:02X} DATA>", chunk_type_name);
         } else {

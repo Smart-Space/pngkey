@@ -3,7 +3,6 @@ use std::str::FromStr;
 
 use crate::args::*;
 use super::chunk::Chunk;
-use super::chunk_type::ChunkType;
 use super::Jpg;
 use crate::Result;
 use crate::key;
@@ -35,7 +34,7 @@ pub fn encode(args: EncodeArgs, bytes: &Vec<u8>) -> Result<()> {
         jpg.modify_chunk(index, encrypted_message.as_bytes().to_vec());
     } else {
         let new_chunk = Chunk::new(
-            ChunkType::from_str(&args.chunk_type)?,
+            u8::from_str(&args.chunk_type).unwrap(),
             encrypted_message.as_bytes().to_vec(),
         );
         jpg.append_chunk(new_chunk);

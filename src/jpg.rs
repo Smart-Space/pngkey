@@ -2,10 +2,9 @@ use std::convert::TryFrom;
 use std::fmt;
 
 mod chunk;
-mod chunk_type;
 pub mod command;
 
-use crate::{Error, Result, jpg::chunk_type::ChunkType};
+use crate::{Error, Result};
 use chunk::Chunk;
 
 
@@ -47,7 +46,7 @@ impl Jpg {
         let chunk_type = u8::from_str_radix(chunk_type, 10).unwrap();
         let index = self
             .chunks.iter()
-            .position(|chunk| chunk.chunk_type().bytes() == chunk_type);
+            .position(|chunk| chunk.chunk_type() == &chunk_type);
         index
     }
 
@@ -96,17 +95,17 @@ impl TryFrom<&[u8]> for Jpg {
 
             match marker_type {
                 0xD8 => { // SOI
-                    chunks.push(Chunk::new(ChunkType::try_from(0xD8).unwrap(), (&[]).to_vec()));
+                    chunks.push(Chunk::new(0xD8, (&[]).to_vec()));
                 }
                 0xD9 => { // EOI
-                    chunks.push(Chunk::new(ChunkType::try_from(0xD9).unwrap(), (&[]).to_vec()));
+                    chunks.push(Chunk::new(0xD9, (&[]).to_vec()));
                     // JPG标准结束
                 }
                 0xDA => { // SOS
                     // 找到下一个 marker
                     if let Some(next_marker_pos) = find_next_marker(bytes, index) {
                         let chunk_bytes = &bytes[index..next_marker_pos];
-                        chunks.push(Chunk::new(ChunkType::try_from(0xDA).unwrap(), chunk_bytes.to_vec()));
+                        chunks.push(Chunk::new(0xDA, chunk_bytes.to_vec()));
                         index = next_marker_pos;
                     } else {
                         return Err("No marker found after SOS chunk".into());
@@ -117,7 +116,7 @@ impl TryFrom<&[u8]> for Jpg {
                     let length = u16::from_be_bytes(length_bytes) as usize;
                     let chunk_end = index + length;
                     let chunk_bytes = &bytes[index+2..chunk_end];
-                    chunks.push(Chunk::new(ChunkType::try_from(marker_type).unwrap(), chunk_bytes.to_vec()));
+                    chunks.push(Chunk::new(marker_type, chunk_bytes.to_vec()));
                     index = chunk_end;
                 }
             }
