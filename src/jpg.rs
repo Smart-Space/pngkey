@@ -1,5 +1,4 @@
 use std::convert::TryFrom;
-use std::fmt;
 
 mod chunk;
 pub mod command;
@@ -123,15 +122,5 @@ impl TryFrom<&[u8]> for Jpg {
 
         }
         Ok(Jpg { header, chunks })
-    }
-}
-
-impl fmt::Display for Jpg {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "JGP:")?;
-        for chunk in &self.chunks {
-            writeln!(f, "{}", chunk)?;
-        }
-        Ok(())
     }
 }

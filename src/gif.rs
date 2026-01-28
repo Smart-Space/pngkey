@@ -1,6 +1,5 @@
 use std::io::Write;
 use std::{convert::TryFrom, io::Read};
-use std::{fmt, vec};
 
 mod chunk;
 pub mod command;
@@ -15,9 +14,6 @@ pub struct Gif {
 }
 
 impl Gif {
-    pub fn append_chunk(&mut self, chunk: ExtensionChunk) {
-        self.chunks.push(Chunk::Extension(chunk));
-    }
 
     pub fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
         if let Some(index) = self.chunk_by_type(chunk_type) {
@@ -34,10 +30,6 @@ impl Gif {
             self.chunks.remove(index);
             let _ = self.add_application_extension(identifier, auth_code, &data);
         }
-    }
-
-    pub fn chunks(&self) -> &[Chunk] {
-        &self.chunks
     }
 
     const IDENTIFIER: [u8; 8] = [b' ', b'p', b'n', b'g', b'k', b'e', b'y', b' '];
@@ -138,9 +130,8 @@ impl Gif {
         for chunk in &self.chunks {
             if let Chunk::Extension(ext) = chunk {
                 if ext.extension_type == 0xFF && ext.data.len() >= 11 {
-                    let identifier = String::from_utf8_lossy(&ext.data[1..9]).to_string();
                     let auth_code = String::from_utf8_lossy(&ext.data[9..12]).to_string();
-                    if identifier != " pngkey " || auth_code != chunk_type {
+                    if ext.data[1..9] != Self::IDENTIFIER || auth_code != chunk_type {
                         continue; // 跳过非目标扩展块
                     }
                     
@@ -226,17 +217,6 @@ impl Gif {
         
         let mut data = Vec::new();
 
-        if ext_type[0] != 0xEF {
-            // 非Comment扩展
-            let mut size = [0u8; 1];
-            reader.read_exact(&mut size)?;
-            data.push(size[0]);
-
-            let mut fixed = vec![0u8; size[0] as usize];
-            reader.read_exact(&mut fixed)?;
-            data.extend_from_slice(&fixed);
-        }
-
         let mut sub = Self::read_sub_blocks(reader)?;
         data.append(&mut sub);
         
@@ -289,15 +269,12 @@ impl TryFrom<&[u8]> for Gif {
         let gct_size_factor = lsd.packed_fields & 0x07 ;
         chunks.push(Chunk::LogicalScreenDescriptor(lsd));
 
-        let global_color_table_size = if has_gct {
+        if has_gct {
             let size = 2u16.pow((gct_size_factor+1) as u32) as usize;
             let mut gct = vec![0u8; size * 3]; // RGB / 1 byte
             cursor.read_exact(&mut gct)?;
             chunks.push(Chunk::GlobalColorTable(gct));
-            Some(size)
-        } else {
-            None
-        };
+        }
 
         // 读取所有数据直到Trailer
         loop {
@@ -326,15 +303,5 @@ impl TryFrom<&[u8]> for Gif {
             }
         }
         Ok(Gif { chunks })
-    }
-}
-
-impl fmt::Display for Gif {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "GIF:")?;
-        for chunk in &self.chunks {
-            writeln!(f, "{}", chunk)?;
-        }
-        Ok(())
     }
 }

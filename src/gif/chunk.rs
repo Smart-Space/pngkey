@@ -1,6 +1,4 @@
-use std::convert::TryFrom;
 use std::fmt;
-use std::str::from_utf8;
 
 #[derive(Debug, Clone)]
 pub enum Chunk {
@@ -108,7 +106,7 @@ impl fmt::Display for ExtensionChunk {
         if self.extension_type == 0xff {
             writeln!(f, "  Application Identifier: {}", self.data[1..9].iter().map(|&b| b as char).collect::<String>())?;
             writeln!(f, "  Application Authentication Code: {}", self.data[9..12].iter().map(|&b| b as char).collect::<String>())?;
-            writeln!(f, "  Data: [{}]", String::from_utf8_lossy(&self.data[12..]))?;
+            writeln!(f, "  Data: [{}]", String::from_utf8_lossy(&self.data[12..]))?; // 这里是data的原始数据，明文可能被截断
         } else {
             writeln!(f, "  ...Datas...")?;
         }

@@ -1,5 +1,4 @@
 use std::convert::TryFrom;
-use std::fmt;
 
 mod chunk;
 mod chunk_type;
@@ -94,15 +93,5 @@ impl TryFrom<&[u8]> for Png {
             index = chunk_end;
         }
         Ok(Png { header, chunks })
-    }
-}
-
-impl fmt::Display for Png {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "PNG:")?;
-        for chunk in &self.chunks {
-            writeln!(f, "{}", chunk)?;
-        }
-        Ok(())
     }
 }

@@ -1,6 +1,6 @@
 # pngkey
 
-将信息文本(密文)写入**png**或**jpg**文件。
+将信息文本(密文)写入**png**、**jpg**或**gif**(*89a*)文件。
 
 [Github Releases · Smart-Space/pngkey](https://github.com/Smart-Space/pngkey/releases)
 
@@ -11,6 +11,8 @@
   > 这也是项目名为"pngkey"的原因，最初的隐写功能仅用于png格式。
 
 - JPG文件隐写方法类似，但由我自己实现，可能存在疏漏。
+
+- GIF仅支持89a版本，现代绝大多数gif文件均为此版本。此功能实现较为复杂，受测试样本所限，**不保证对所有gif源文件不造成损坏**，建议编码时加上`-o`参数。
 
 - 加密
   - 无密码时，明文写入指定`chunk_type`块；
@@ -25,11 +27,15 @@
   > ---
   >
   > JPG的`chunk_type`为一个大于等于1但是小于等于191的数字。
+  >
+  > ---
+  >
+  > GIF的`chunk_type`为三个字节的字符串或字符，对本机编码无要求，只要加密解密时所用的输入编码一致，保证字符串或字符占用三个字节即可。（比如，`utf-8`编码的`中`本身就占用三个字节，则其本身就是一个`chunk_type`）
 
 ## 使用
 
 ```
-A tool to encrypt and decrypt messages in PNG or JPG images using ChaCha20-Poly1305 and Argon2
+A tool to encrypt and decrypt messages in PNG, JPG or GIF images using ChaCha20-Poly1305 and Argon2
 
 Usage: pngkey <COMMAND>
 
@@ -88,7 +94,7 @@ Options:
   -h, --help  Print help
 ```
 
-> **注意**，这里不会检测块名称是否为PNG或JPG标准需要。
+> **注意**，这里不会检测块名称是否为PNG、JPG或GIF标准需要。
 
 ### 打印
 
@@ -103,4 +109,4 @@ Options:
   -h, --help  Print help
 ```
 
-> PNG和JPG数据块转为文本数据量非常庞大，不会显示具体数据内容。
+> PNG、JPG和GIF数据块转为文本数据量非常庞大，不会显示具体数据内容。
