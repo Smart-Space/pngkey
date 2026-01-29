@@ -97,10 +97,10 @@ impl Gif {
         ext_data.extend_from_slice(identifier);
         ext_data.extend_from_slice(auth_code);
         
-        // 添加数据子块（每个子块最多254字节数据 + 1字节长度）
+        // 添加数据子块（每个子块最多255字节数据 + 1字节长度）
         let mut remaining_data = data;
         while !remaining_data.is_empty() {
-            let chunk_size = std::cmp::min(remaining_data.len(), 254);
+            let chunk_size = std::cmp::min(remaining_data.len(), 255);
             ext_data.push(chunk_size as u8);
             ext_data.extend_from_slice(&remaining_data[..chunk_size]);
             remaining_data = &remaining_data[chunk_size..];
