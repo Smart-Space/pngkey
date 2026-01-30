@@ -115,6 +115,8 @@ Options:
 > GIF文件无块名称时，默认仅显示用于pngkey识别的块。
 
 ## PNGKEY-UI
+<img width="500" alt="PixPin_2026-01-30_19-20-46" src="https://github.com/user-attachments/assets/a9afcff0-12dd-4e1f-8e6e-4aa4d2808aa8" />
+
 
 自3.1.0起，发行版添加`pngkey-ui`版本，当命令行调用时无子命令、或者直接启动时显示界面窗口。采用slint构建，*可能存在性能问题*。
 
