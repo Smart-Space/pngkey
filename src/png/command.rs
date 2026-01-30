@@ -56,7 +56,7 @@ pub fn encode(args: EncodeArgs, bytes: &Vec<u8>) -> Result<()> {
     Ok(())
 }
 
-pub fn decode(args: DecodeArgs, bytes: &Vec<u8>) -> Result<()> {
+pub fn decode(args: DecodeArgs, bytes: &Vec<u8>) -> Result<String> {
     // chunk type可用
     if !is_valid_chunk_type(&args.chunk_type) {
         return Err(format!("Invalid ChunkType, could not in {VALID_CHUNK_TYPES:?}.").into());
@@ -72,7 +72,7 @@ pub fn decode(args: DecodeArgs, bytes: &Vec<u8>) -> Result<()> {
     let password = args.password.unwrap_or_else(|| "".to_string());
     let decrypted_message = key::decrypt(&message, &password)?;
     println!("{}", decrypted_message);
-    Ok(())
+    Ok(decrypted_message)
 }
 
 pub fn remove(args: RemoveArgs, bytes: &Vec<u8>) -> Result<()> {

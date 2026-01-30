@@ -1,0 +1,119 @@
+import { VerticalBox, Button, LineEdit, TextEdit, CheckBox } from "std-widgets.slint";
+
+// 定义主组件
+export component AppWindow inherits Window {
+    // min-height: 400px;
+    // min-width: 500px;
+    // preferred-height: 400px;
+    // preferred-width: 500px;
+    // 我↑不↓明↓白↑，怎么调整窗口大小搞得跟内存泄漏一样……
+    // 此外，动多了也会缓慢泄露……
+    height: 500px;
+    width: 700px;
+    title: "PngKey";
+
+    default-font-family: "微软雅黑";
+    default-font-size: 16px;
+
+    property <bool> save_as;
+    property <string> output_path;
+    in-out property <string> result_text: "";
+
+    callback encode(file:string, chunk:string, content:string, key:string, output:string);
+    callback decode(file:string, chunk:string, key:string);
+    callback remove(file:string, chunk:string);
+
+    VerticalBox {
+        spacing: 10px;
+        padding: 20px;
+        alignment: LayoutAlignment.stretch;
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.stretch;
+            spacing: 10px;
+            
+            Text {
+                text: "图片路径";
+                vertical-alignment: TextVerticalAlignment.center;
+                wrap: TextWrap.no-wrap;
+            }
+            
+            pathentry := LineEdit {
+                horizontal-alignment: TextHorizontalAlignment.left;
+                horizontal-stretch: 1;
+                placeholder-text: "png, jpg or gif";
+                text: "";
+            }
+            
+        }
+        HorizontalLayout {
+            alignment: LayoutAlignment.stretch;
+            spacing: 10px;
+            Text {
+                vertical-alignment: TextVerticalAlignment.center;
+                text: "块名称";
+            }
+            chunkentry := LineEdit {
+                placeholder-text: "chunk-type";
+                text: "";
+            }
+            Text {
+                text: "密码";
+                vertical-alignment: TextVerticalAlignment.center;
+            }
+            keyentry := LineEdit {
+                horizontal-stretch: 10;
+                placeholder-text: "password";
+                text: "";
+            }
+        }
+        HorizontalLayout {
+            spacing: 10px;
+            contenttext := TextEdit {
+                font-size: 14px;
+                placeholder-text: "信息文本";
+            }
+            
+            resulttext := TextEdit {
+                font-size: 14px;
+                placeholder-text: "输出结果";
+                read-only: true;
+                text: result_text;
+            }
+        }
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            spacing: 20px;
+            Button {
+                text: "写入";
+                clicked => {
+                    if (save_as) {
+                        root.encode(pathentry.text, chunkentry.text, contenttext.text, keyentry.text, output_path);
+                    } else {
+                        root.encode(pathentry.text, chunkentry.text, contenttext.text, keyentry.text, "");
+                    }
+                }
+            }
+            Button {
+                text: "读取";
+                clicked => {root.decode(pathentry.text, chunkentry.text, keyentry.text);}
+            }
+            Button {
+                text: "删除";
+                clicked => {root.remove(pathentry.text, chunkentry.text);}
+            }
+            CheckBox {
+                text: "另存为";
+                checked <=> save_as;
+            }
+        }
+        if save_as: outputframe := HorizontalLayout {
+            spacing: 10px;
+            visible: true;
+            outputentry := LineEdit {
+                placeholder-text: "输出图片路径";
+                text <=> output_path;
+            }
+        }
+    }
+}

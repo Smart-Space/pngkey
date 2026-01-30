@@ -28,23 +28,24 @@ pub fn encode(args: EncodeArgs) -> Result<()> {
     Ok(())
 }
 
-pub fn decode(args: DecodeArgs) -> Result<()> {
+pub fn decode(args: DecodeArgs) -> Result<String> {
     if !args.file_path.exists() {
         return Err("File does not exist".into());
     }
     let bytes = fs::read(args.file_path.clone())?;
 
+    let result: String;
     if is_png(&bytes) {
-        pngcommand::decode(args, &bytes)?;
+        result = pngcommand::decode(args, &bytes)?;
     } else if is_jpg(&bytes) {
-        jpgcommand::decode(args, &bytes)?;
+        result = jpgcommand::decode(args, &bytes)?;
     } else if is_gif(&bytes) {
-        gifcommand::decode(args, &bytes)?;
+        result = gifcommand::decode(args, &bytes)?;
     } else {
         return Err("No Supported Format".into());
     }
     
-    Ok(())
+    Ok(result)
 }
 
 pub fn remove(args: RemoveArgs) -> Result<()> {

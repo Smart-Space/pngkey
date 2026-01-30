@@ -10,7 +10,7 @@ use std::path::PathBuf;
 )]
 pub struct Cli {
     #[clap(subcommand)]
-    pub subcommand: PngKeyArgs,
+    pub subcommand: Option<PngKeyArgs>,
 }
 
 #[derive(Debug, Subcommand)]
@@ -23,7 +23,7 @@ pub enum PngKeyArgs {
 
 #[derive(Debug, Args)]
 pub struct EncodeArgs {
-    /// The file path to the PNG file to be encoded.
+    /// The file path to the Image file to be encoded.
     pub file_path: PathBuf,
     /// The chunk type to be used for the message.
     pub chunk_type: String,
@@ -39,7 +39,7 @@ pub struct EncodeArgs {
 
 #[derive(Debug, Args)]
 pub struct DecodeArgs {
-    /// The file path to the PNG file to be decoded.
+    /// The file path to the Image file to be decoded.
     pub file_path: PathBuf,
     /// The chunk type to be used for the message.
     pub chunk_type: String,
@@ -50,7 +50,7 @@ pub struct DecodeArgs {
 
 #[derive(Debug, Args)]
 pub struct RemoveArgs {
-    /// The file path to the PNG file to be removed.
+    /// The file path to the Image file to be removed.
     pub file_path: PathBuf,
     /// The chunk type to be used for the message.
     pub chunk_type: String,
@@ -58,8 +58,11 @@ pub struct RemoveArgs {
 
 #[derive(Debug, Args)]
 pub struct PrintArgs {
-    /// The file path to the PNG file to be printed.
+    /// The file path to the Image file to be printed.
     pub file_path: PathBuf,
     /// The chunk type to be used for the message.
     pub chunk_type: Option<String>,
+    /// Show all chunks in the GIF file.
+    #[clap(short, long)]
+    pub all: bool,
 }

@@ -1,6 +1,7 @@
 use std::fs;
 
 use crate::args::*;
+use crate::gif::chunk::Chunk;
 use super::Gif;
 use crate::Result;
 use crate::key;
@@ -45,7 +46,7 @@ pub fn encode(args: EncodeArgs, bytes: &Vec<u8>) -> Result<()> {
     Ok(())
 }
 
-pub fn decode(args: DecodeArgs, bytes: &Vec<u8>) -> Result<()> {
+pub fn decode(args: DecodeArgs, bytes: &Vec<u8>) -> Result<String> {
     // chunk type可用
     if !is_valid_chunk_type(&args.chunk_type) {
         return Err(format!("Invalid ChunkType, should be 3 bytes long.").into());
@@ -60,7 +61,7 @@ pub fn decode(args: DecodeArgs, bytes: &Vec<u8>) -> Result<()> {
     let password = args.password.unwrap_or_else(|| "".to_string());
     let decrypted_message = key::decrypt(&message, &password)?;
     println!("{}", decrypted_message);
-    Ok(())
+    Ok(decrypted_message)
 }
 
 pub fn remove(args: RemoveArgs, bytes: &Vec<u8>) -> Result<()> {
@@ -80,7 +81,18 @@ pub fn print(args: PrintArgs, bytes: &Vec<u8>) -> Result<()> {
 
     if chunk_type.is_empty() {
         for chunk in &gif.chunks {
-            println!("{}", chunk);
+            if args.all {
+                println!("{}", chunk);
+            } else {
+                match chunk {
+                    Chunk::Extension(extchunk) => {
+                        if extchunk.extension_type == 0xff && extchunk.data[1..9] == IDENTIFIER {
+                            println!("{}", chunk);
+                        }
+                    }
+                    _ => {}
+                }
+            }
         }
     } else {
         if let Some(index) = gif.chunk_by_type(&chunk_type) {
